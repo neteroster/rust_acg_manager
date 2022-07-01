@@ -1,6 +1,11 @@
+use std::path::Path;
+
 use music_manager::scanner::DirectoryType;
 use octocrab::{Octocrab, models::issues::Issue, Error};
+use blake3;
+use study::music_manager::scanner;
 mod music_manager;
+
 
 const TOKEN : &str = "";
 async fn init_issue(ghc: &Octocrab) -> Result<Issue, Error> {
@@ -15,10 +20,9 @@ async fn init_issue(ghc: &Octocrab) -> Result<Issue, Error> {
 
 #[tokio::main]
 async fn main() {
-    let t = music_manager::scanner::parse_directory("[Set]Angel Beats!").await.unwrap();
-    match t {
-        DirectoryType::AlbumSet { title: b } => println!("{}", b),
-        _ => (),
-    }
+    let p = Path::new("D:/ShortTermTemp/Music-5F0455E09EA42C457E17F6997C89CD9D74E40A026B3FD57F8E8C9A93704D1EE7/");
+    let t = scanner::blake3_dir_digest(p).await;
+    println!("{}", t.unwrap().to_hex());
+
 
 }

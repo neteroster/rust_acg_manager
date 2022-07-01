@@ -1,5 +1,10 @@
+use std::collections::LinkedList;
+use std::fs::{DirEntry, File};
+use std::io::{BufReader, Read};
 use std::{path::Path, io::Error, io::ErrorKind};
 use std::{fs, path};
+use blake3::{self, Hash};
+use walkdir::{self, WalkDir};
 
 pub enum AudioQuality {
     CdRes,
@@ -80,6 +85,27 @@ pub async fn parse_directory(path_str: &str) -> Result<DirectoryType, Error> { /
 
 
 }
+
+pub async fn blake3_dir_digest(dir: &Path) -> Result<Hash, Error> {
+    if !dir.is_dir() {
+        return Err(Error::new(ErrorKind::Other, "Path is not a directory."));
+    }
+    let mut b3hasher = blake3::Hasher::new();
+    for entry in WalkDir::new(dir) {
+        let entry = entry?;
+        if entry.path().is_dir() { continue; }
+        let input = File::open(entry.path())?;
+        let mut reader = BufReader::new(input);
+        let mut buffer = [0; 4096];
+        loop {
+            let count = reader.read(&mut buffer)?;
+            if count == 0 { break; }
+            b3hasher.update(&buffer[..count]);
+        }
+    }
+    Ok(b3hasher.finalize())
+}
+
 
 pub async fn scan(path: &Path) -> Result<Music, Error>
 {
