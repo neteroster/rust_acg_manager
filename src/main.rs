@@ -1,5 +1,6 @@
+use music_manager::scanner::DirectoryType;
 use octocrab::{Octocrab, models::issues::Issue, Error};
-
+mod music_manager;
 
 const TOKEN : &str = "";
 async fn init_issue(ghc: &Octocrab) -> Result<Issue, Error> {
@@ -14,13 +15,10 @@ async fn init_issue(ghc: &Octocrab) -> Result<Issue, Error> {
 
 #[tokio::main]
 async fn main() {
-    let ghc_builder = octocrab::OctocrabBuilder::new();
-    let ghc = ghc_builder.personal_token(String::from(TOKEN)).build().unwrap();
-    match init_issue(&ghc).await {
-        Err(err) => println!("{}", err.to_string()),
+    let t = music_manager::scanner::parse_directory("[Set]Angel Beats!").await.unwrap();
+    match t {
+        DirectoryType::AlbumSet { title: b } => println!("{}", b),
         _ => (),
     }
-
-    println!("5");
 
 }
