@@ -1,7 +1,7 @@
 use octocrab::{Octocrab, models::issues::Issue, Error};
 
 
-const TOKEN : &str = "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";
+const TOKEN : &str = "";
 async fn init_issue(ghc: &Octocrab) -> Result<Issue, Error> {
     let iss = ghc
     .issues("neteroster", "blog")
