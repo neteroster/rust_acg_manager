@@ -6,6 +6,8 @@ use std::{fs, path};
 use blake3::{self, Hash};
 use walkdir::{self, WalkDir};
 
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub enum AudioQuality {
     CdRes,
     HiRES,
@@ -23,7 +25,7 @@ pub enum CheckSum {
 pub struct Album {
     quality: AudioQuality,
     title: String,
-    id: String,
+    id: Option<String>,
     checksum: CheckSum,
 }
 
@@ -39,7 +41,7 @@ pub struct Music {
 }
 
 pub enum DirectoryType { // n pub
-    Album {quality: AudioQuality, title: String, id: String, },
+    Album {quality: AudioQuality, title: String, id: Option<String>, },
     AlbumSet {title: String},
 }
 
@@ -74,10 +76,14 @@ pub async fn parse_directory(path_str: &str) -> Result<DirectoryType, Error> { /
                 "Norm-Res" => AudioQuality::NormalRes,
                 _ => return Err(Error::new(ErrorKind::Other, "Audio quality parse error.")),
             };
+            let album_id = match album_id {
+                "N" => None,
+                _ => Some(String::from(album_id)),
+            };
             Ok(DirectoryType::Album { 
                     quality: album_quality,
                     title: String::from(album_title),
-                    id: String::from(album_id),
+                    id: album_id,
                 })
         },
         _ => Err(Error::new(ErrorKind::Other, "Folder name parse error.")),
