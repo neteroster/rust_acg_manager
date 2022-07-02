@@ -15,7 +15,7 @@ async fn blake3_dir_digest_test() {
 async fn parse_directory_test() {
     let test_0 = "[KSLA-0162][CD-Res]Summer Pockets Orchestara Album 『Echoes of Summer』";
     let test_1 = "[N][Hi-Res]「見上げてごらん、夜空の星を Interstellar Focus」原声带";
-    let test_2 = "[Set]来自风平浪静的明天";
+    let test_2 = "[Set]Angel Beats!";
 
     let res_0 = parse_directory(test_0).await.unwrap();
     let res_1 = parse_directory(test_1).await.unwrap();
@@ -30,7 +30,7 @@ async fn parse_directory_test() {
     };
     match res_1 {
         DirectoryType::Album { quality, title, id } => {
-            assert_eq!(quality, AudioQuality::HiRES);
+            assert_eq!(quality, AudioQuality::HiRes);
             assert_eq!(title.as_str(), "「見上げてごらん、夜空の星を Interstellar Focus」原声带");
             assert_eq!(id, None);
         },
@@ -38,7 +38,7 @@ async fn parse_directory_test() {
     };
     match res_2 {
         DirectoryType::AlbumSet { title } => {
-            assert_eq!(title.as_str(), "来自风平浪静的明天");
+            assert_eq!(title.as_str(), "Angel Beats!");
         },
         _ => panic!("tests assertion failed. [parse_directory_test()]"),
     }

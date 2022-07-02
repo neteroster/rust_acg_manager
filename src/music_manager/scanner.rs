@@ -10,34 +10,42 @@ use walkdir::{self, WalkDir};
 #[derive(Debug)]
 pub enum AudioQuality {
     CdRes,
-    HiRES,
+    HiRes,
     NormalRes,
 }
 
 pub enum CheckSum {
-    Sha256(String),
-    Blake3(String),
+    Blake3(Hash),
 }
 
 #[allow(dead_code)]
 
 #[allow(dead_code)]
 pub struct Album {
-    quality: AudioQuality,
-    title: String,
-    id: Option<String>,
-    checksum: CheckSum,
+    pub quality: AudioQuality,
+    pub title: String,
+    pub id: Option<String>,
+    pub checksum: CheckSum,
 }
 
 #[allow(dead_code)]
 pub struct AlbumSet {
-    albums: Vec<Album>,
-    title: String,
+    pub albums: Vec<Album>,
+    pub title: String,
 }
 
 pub struct Music {
-    single_album: Vec<Album>,
-    album_set: Vec<AlbumSet>,
+    pub single_album: Vec<Album>,
+    pub album_set: Vec<AlbumSet>,
+}
+
+impl Music {
+    fn new() -> Music {
+        Music {
+            single_album: Vec::new(),
+            album_set: Vec::new(),
+        }
+    }
 }
 
 pub enum DirectoryType { // n pub
@@ -45,14 +53,14 @@ pub enum DirectoryType { // n pub
     AlbumSet {title: String},
 }
 
-pub async fn parse_directory(path_str: &str) -> Result<DirectoryType, Error> { // n pub
+pub async fn parse_directory(filename: &str) -> Result<DirectoryType, Error> { // n pub
     let path_strs = 
-    path_str
+    filename
     .replace("][", "|")
     .replace("]", "|")
     .replace("[", "");
     let mut path_strs = path_strs.split('|');
-
+    println!("{:?}", path_strs);
     match path_strs.next() {
         Some("Set") => {
             let album_set_title = match path_strs.next() {
@@ -71,7 +79,7 @@ pub async fn parse_directory(path_str: &str) -> Result<DirectoryType, Error> { /
                 Some(title) => title,
             };
             let album_quality = match album_quality {
-                "Hi-Res" => AudioQuality::HiRES,
+                "Hi-Res" => AudioQuality::HiRes,
                 "CD-Res" => AudioQuality::CdRes,
                 "Norm-Res" => AudioQuality::NormalRes,
                 _ => return Err(Error::new(ErrorKind::Other, "Audio quality parse error.")),
@@ -115,7 +123,7 @@ pub async fn blake3_dir_digest(dir: &Path) -> Result<Hash, Error> {
 
 pub async fn scan(path: &Path) -> Result<Music, Error>
 {
-    let mut music : Music;
+    let mut music = Music::new();
     if !path.is_dir() {
         return Err(Error::new(ErrorKind::Other, "Path is not a directory."));
     }
@@ -130,10 +138,69 @@ pub async fn scan(path: &Path) -> Result<Music, Error>
             Some(pstr) => pstr,
             None => return Err(Error::new(ErrorKind::Other, "None name found.")),
         };
+        let folder_name = match path.file_name() {
+            Some(folder_name) => {
+                match folder_name.to_str() {
+                    Some(folder_name) => folder_name,
+                    None => return Err(Error::new(ErrorKind::Other, "Folder name parse error."))
+                }
+            },
+            None => return Err(Error::new(ErrorKind::Other, "Folder name parse error.")),
+        };
+        
+        match parse_directory(folder_name).await? {
+            DirectoryType::Album { quality, title, id} => {
+                let album = Album {
+                    quality,
+                    title,
+                    id,
+                    checksum: CheckSum::Blake3(blake3_dir_digest(path.as_path()).await?),
+                };
+                music.single_album.push(album);
+            },
+            DirectoryType::AlbumSet { title } => {
+                let mut album_set = AlbumSet {
+                    albums: Vec::new(),
+                    title,
+                };
+                for entry in fs::read_dir(path)? {
+                    let entry = entry?;
+                    let path = entry.path();
+                    let path_str = match path.to_str() {
+                        Some(s) => s,
+                        None => return Err(Error::new(ErrorKind::Other, "Album set inside parse error.")),
+                    };
+                    let folder_name = match path.file_name() {
+                        Some(folder_name) => {
+                            match folder_name.to_str() {
+                                Some(folder_name) => folder_name,
+                                None => return Err(Error::new(ErrorKind::Other, "Folder name parse error."))
+                            }
+                        },
+                        None => return Err(Error::new(ErrorKind::Other, "Folder name parse error.")),
+                    };
+                    match parse_directory(folder_name).await? {
+                        DirectoryType::Album { quality, title, id } => {
+                            let album = Album {
+                                quality,
+                                title,
+                                id,
+                                checksum: CheckSum::Blake3(blake3_dir_digest(path.as_path()).await?),
+                            };
+                            album_set.albums.push(album);
+                        },
+                        _ => return Err(Error::new(ErrorKind::Other, "Not a album in the album set.")),
+
+                    }
+                }
+                music.album_set.push(album_set);
+            },
+
+        }
 
     }
 
-    Err(Error::new(ErrorKind::Other, "Pass"))
+    Ok(music)
 }
 
 

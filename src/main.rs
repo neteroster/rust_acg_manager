@@ -1,8 +1,7 @@
 use std::path::Path;
 
-use music_manager::scanner::DirectoryType;
+use music_manager::scanner::{Music, Album, AlbumSet};
 use octocrab::{Octocrab, models::issues::Issue, Error};
-use blake3;
 use study::music_manager::scanner;
 mod music_manager;
 
@@ -20,9 +19,16 @@ async fn init_issue(ghc: &Octocrab) -> Result<Issue, Error> {
 
 #[tokio::main]
 async fn main() {
-    let p = Path::new("D:/hash_test");
-    let t = scanner::blake3_dir_digest(p).await;
-    println!("{}", t.unwrap().to_hex());
+    let p = Path::new("D:/ShortTermTemp/Music-5F0455E09EA42C457E17F6997C89CD9D74E40A026B3FD57F8E8C9A93704D1EE7");
+    let t = scanner::scan(p).await.unwrap();
+    for i in t.single_album {
+        println!("{}", i.title);
+    }
+    for k in t.album_set {
+        for j in k.albums {
+            println!("{}", j.title)
+        }
+    }
 
 
 }
