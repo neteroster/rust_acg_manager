@@ -1,6 +1,6 @@
 use blake3::Hash;
 use std::{path::Path, str::FromStr};
-use crate::music_manager::scanner::{self, parse_directory, DirectoryType, AudioQuality};
+use crate::music_manager::scanner::{self, parse_directory, DirectoryType, AudioQuality, scan};
 
 #[tokio::test]
 async fn blake3_dir_digest_test() {
@@ -43,4 +43,21 @@ async fn parse_directory_test() {
         _ => panic!("tests assertion failed. [parse_directory_test()]"),
     }
 
+}
+
+#[tokio::test]
+async fn scan_test() {
+    let res = scan(Path::new("D:/cd_test")).await.unwrap();
+    let ab = res.single_album;
+    assert_eq!(ab[0].quality, AudioQuality::CdRes);
+    assert_eq!(ab[0].id.as_ref().unwrap().as_str(), "0");
+    assert_eq!(ab[0].title.as_str(), "TitleA");
+
+    assert_eq!(ab[1].quality, AudioQuality::HiRes);
+    assert_eq!(ab[1].id, None);
+    assert_eq!(ab[1].title.as_str(), "TitleB");
+
+    let abls = res.album_set;
+    assert_eq!(abls[0].title.as_str(), "TitleC");
+    assert_eq!(abls[0].albums[1].quality, AudioQuality::NormalRes);
 }
