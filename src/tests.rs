@@ -1,6 +1,6 @@
 use blake3::Hash;
 use std::{path::Path, str::FromStr};
-use crate::music_manager::scanner::{self, parse_directory, DirectoryType, AudioQuality, scan};
+use crate::music_manager::{scanner::{self, parse_directory, DirectoryType, AudioQuality, scan, Album}, interact::generate_line_album};
 
 #[tokio::test]
 async fn blake3_dir_digest_test() {
@@ -60,4 +60,24 @@ async fn scan_test() {
     let abls = res.album_set;
     assert_eq!(abls[0].title.as_str(), "TitleC");
     assert_eq!(abls[0].albums[1].quality, AudioQuality::NormalRes);
+}
+
+#[test]
+fn generate_line_album_test() {
+    let ab = Album {
+        quality: AudioQuality::CdRes,
+        title: String::from("TestT"),
+        id: Some(String::from("A001")),
+        checksum: scanner::CheckSum::Blake3(Hash::from_str("cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb").unwrap())
+    };
+    let res = generate_line_album(&ab, 1);
+    assert_eq!(res.as_str(), "    - [A001][CD-Res]TestT[checksum | BLAKE3 | cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb]");
+    let ab = Album {
+        quality: AudioQuality::CdRes,
+        title: String::from("TestT"),
+        id: None,
+        checksum: scanner::CheckSum::Blake3(Hash::from_str("cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb").unwrap())
+    };
+    let res = generate_line_album(&ab, 1);
+    assert_eq!(res.as_str(), "    - [N][CD-Res]TestT[checksum | BLAKE3 | cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb]");
 }

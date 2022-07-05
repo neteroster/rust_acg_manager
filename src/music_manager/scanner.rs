@@ -1,8 +1,6 @@
-use std::collections::LinkedList;
-use std::fs::{DirEntry, File};
+use std::fs::{self, File};
 use std::io::{BufReader, Read};
 use std::{path::Path, io::Error, io::ErrorKind};
-use std::{fs, path};
 use blake3::{self, Hash};
 use walkdir::{self, WalkDir};
 
@@ -13,12 +11,28 @@ pub enum AudioQuality {
     HiRes,
     NormalRes,
 }
-
-pub enum CheckSum {
-    Blake3(Hash),
+impl AudioQuality {
+    pub fn as_str(&self) -> &str {
+        match self {
+            AudioQuality::CdRes => "CD-Res",
+            AudioQuality::HiRes => "Hi-Res",
+            AudioQuality::NormalRes => "Norm-Res",
+        }
+    }
 }
 
-#[allow(dead_code)]
+pub enum CheckSum {
+    Blake3(blake3::Hash),
+}
+
+impl CheckSum {
+    pub fn as_str(&self) -> String {
+        match self {
+            CheckSum::Blake3(hash) => String::from(hash.to_hex().as_str()),
+        }
+    }
+}
+
 
 #[allow(dead_code)]
 pub struct Album {
@@ -40,7 +54,7 @@ pub struct Music {
 }
 
 impl Music {
-    fn new() -> Music {
+    pub fn new() -> Music {
         Music {
             single_album: Vec::new(),
             album_set: Vec::new(),
