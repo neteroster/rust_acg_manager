@@ -21,7 +21,6 @@ async fn init_issue(ghc: &Octocrab) -> Result<Issue, Error> {
 async fn main() {
     let p = Path::new("D:/cd_test");
     let t = scanner::scan(p).await.unwrap();
-    
     let r = t.to_markdown();
     print!("{}", r.as_str());
     

@@ -1,6 +1,6 @@
 use blake3::Hash;
 use std::{path::Path, str::FromStr};
-use crate::music_manager::{scanner::{self, parse_directory, DirectoryType, AudioQuality, scan, Album}, interact::generate_line_album};
+use crate::{music_manager::{scanner::{self, parse_directory, DirectoryType, AudioQuality, scan, Album}, interact::generate_line_album}, config::parser::AllConfig};
 
 #[tokio::test]
 async fn blake3_dir_digest_test() {
@@ -80,4 +80,12 @@ fn generate_line_album_test() {
     };
     let res = generate_line_album(&ab, 1);
     assert_eq!(res.as_str(), "    - [N][CD-Res]TestT[checksum | BLAKE3 | cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb]");
+}
+
+#[test]
+fn config_read_from_file_test() {
+    let p = Path::new("D:/cfs.json");
+    let res = AllConfig::from_file(p).unwrap();
+    assert_eq!(res.username, "neteroster");
+    assert_eq!(res.music_config.enable, true);
 }
