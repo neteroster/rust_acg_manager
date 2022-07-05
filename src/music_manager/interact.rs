@@ -1,4 +1,7 @@
-use std::io::Error;
+use std::{io::Error};
+
+pub use crate::config::parser::AllConfig;
+
 use super::scanner::{Music, Album, AlbumSet, AudioQuality};
 
 
@@ -26,16 +29,31 @@ impl Music {
             res_str.push_str(generate_line_album(&album, 0).as_str());
             res_str.push('\n');
         }
+        res_str.push('\n');
         for album_set in &self.album_set {
-            res_str.push_str(format!("[Album Set] {}", album_set.title).as_str());
+            res_str.push_str(format!("- [Album Set] {}", album_set.title).as_str());
             res_str.push('\n');
             for album in &album_set.albums {
                 res_str.push_str(generate_line_album(album, 1).as_str());
                 res_str.push('\n');
             }
+            res_str.push('\n');
         }
 
         res_str
+    }
+    pub async fn push_to_github(&self, cfg: &AllConfig) -> Result<(), octocrab::Error> {
+        let ghc_builder = octocrab::OctocrabBuilder::new();
+        let markdown_text = self.to_markdown();
+        let ghc = ghc_builder
+        .personal_token(cfg.access_key.clone())
+        .build()?;
+        ghc.issues(&cfg.username, &cfg.repo_name)
+        .update(cfg.music_config.issue_id)
+        .body(markdown_text.as_str())
+        .send()
+        .await?;
+        Ok(())
     }
 }
 

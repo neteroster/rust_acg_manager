@@ -1,4 +1,4 @@
-use std::{path::Path, io::Error, fs::{self, File}};
+use std::{path::Path, io::Error, fs};
 use serde_json;
 use serde::Deserialize;
 
@@ -20,6 +20,7 @@ pub struct ProgressConfig {
 #[derive(Deserialize)]
 pub struct AllConfig {
     pub username: String,
+    pub access_key: String,
     pub repo_name: String,
     pub music_config: MusicConfig,
     pub progress_config: ProgressConfig,
