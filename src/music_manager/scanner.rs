@@ -74,7 +74,6 @@ pub async fn parse_directory(filename: &str) -> Result<DirectoryType, Error> { /
     .replace("]", "|")
     .replace("[", "");
     let mut path_strs = path_strs.split('|');
-    println!("{:?}", path_strs);
     match path_strs.next() {
         Some("Set") => {
             let album_set_title = match path_strs.next() {

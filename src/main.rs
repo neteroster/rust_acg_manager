@@ -19,16 +19,11 @@ async fn init_issue(ghc: &Octocrab) -> Result<Issue, Error> {
 
 #[tokio::main]
 async fn main() {
-    let p = Path::new("D:/ShortTermTemp/Music-5F0455E09EA42C457E17F6997C89CD9D74E40A026B3FD57F8E8C9A93704D1EE7");
+    let p = Path::new("D:/cd_test");
     let t = scanner::scan(p).await.unwrap();
-    for i in t.single_album {
-        println!("{}", i.title);
-    }
-    for k in t.album_set {
-        for j in k.albums {
-            println!("{}", j.title)
-        }
-    }
+    
+    let r = t.to_markdown();
+    print!("{}", r.as_str());
     
 
 }

@@ -18,10 +18,24 @@ pub fn generate_line_album(al: &Album, ind_level: usize) -> String {
     res_str
 
 }
-//impl Music {
-//    pub fn to_markdown() -> Result<String, Error> {
-//        let mut res_str = String::new();
-//
-//    }
-//}
+
+impl Music {
+    pub fn to_markdown(&self) -> String {
+        let mut res_str = String::new();
+        for album in &self.single_album {
+            res_str.push_str(generate_line_album(&album, 0).as_str());
+            res_str.push('\n');
+        }
+        for album_set in &self.album_set {
+            res_str.push_str(format!("[Album Set] {}", album_set.title).as_str());
+            res_str.push('\n');
+            for album in &album_set.albums {
+                res_str.push_str(generate_line_album(album, 1).as_str());
+                res_str.push('\n');
+            }
+        }
+
+        res_str
+    }
+}
 
