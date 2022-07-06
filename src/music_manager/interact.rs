@@ -1,8 +1,10 @@
-use std::{io::Error};
+use std::{io::Error, str::FromStr};
 
 pub use crate::config::parser::AllConfig;
 
-use super::scanner::{Music, Album, AlbumSet, AudioQuality};
+use super::scanner::{Music, Album, AlbumSet, AudioQuality, CheckSum};
+use blake3::Hash;
+use serde::{Serialize, Deserialize, de::Visitor};
 
 
 pub fn generate_line_album(al: &Album, ind_level: usize) -> String {
@@ -20,6 +22,40 @@ pub fn generate_line_album(al: &Album, ind_level: usize) -> String {
 
     res_str
 
+}
+
+impl Serialize for CheckSum {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        let cksum = match self {
+            CheckSum::Blake3(cksum) => cksum,
+        };
+        serializer.serialize_str(cksum.to_string().as_str())
+    }
+}
+
+struct CheckSumVisitor;
+impl<'de> Visitor<'de> for CheckSumVisitor {
+    type Value = CheckSum;
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a string of blake3 hash.")
+    }
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where E: serde::de::Error, {
+        let b3hash = Hash::from_str(v);
+        match b3hash {
+            Ok(b3hash) => Ok(CheckSum::Blake3(b3hash)),
+            Err(err) => Err(E::custom("Deserialize hash error."))
+        }
+
+    }
+}
+
+impl<'de> Deserialize<'de> for CheckSum {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        deserializer.deserialize_string(CheckSumVisitor)
+    }
 }
 
 impl Music {
@@ -55,5 +91,16 @@ impl Music {
         .await?;
         Ok(())
     }
+    pub fn serialize_to_json(&self) -> Result<String, serde_json::Error> {
+        match serde_json::to_string(&self) {
+            Ok(serialized) => Ok(serialized),
+            Err(err) => Err(err),
+        }
+    }
+    pub fn from_json(json_str: &str) -> Result<Music, serde_json::Error> {
+        let music : Music = serde_json::from_str(json_str)?;
+        Ok(music)
+    }
+    
 }
 

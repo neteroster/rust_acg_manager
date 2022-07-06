@@ -3,9 +3,10 @@ use std::io::{BufReader, Read};
 use std::{path::Path, io::Error, io::ErrorKind};
 use blake3::{self, Hash};
 use walkdir::{self, WalkDir};
+use serde::{Serialize, Deserialize};
 
 #[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum AudioQuality {
     CdRes,
     HiRes,
@@ -25,6 +26,7 @@ pub enum CheckSum {
     Blake3(blake3::Hash),
 }
 
+
 impl CheckSum {
     pub fn as_str(&self) -> String {
         match self {
@@ -35,6 +37,7 @@ impl CheckSum {
 
 
 #[allow(dead_code)]
+#[derive(Serialize, Deserialize)]
 pub struct Album {
     pub quality: AudioQuality,
     pub title: String,
@@ -43,11 +46,13 @@ pub struct Album {
 }
 
 #[allow(dead_code)]
+#[derive(Serialize, Deserialize)]
 pub struct AlbumSet {
     pub albums: Vec<Album>,
     pub title: String,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Music {
     pub single_album: Vec<Album>,
     pub album_set: Vec<AlbumSet>,
