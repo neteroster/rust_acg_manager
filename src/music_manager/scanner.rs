@@ -1,5 +1,6 @@
 use std::fs::{self, File};
 use std::io::{BufReader, Read};
+use std::str::FromStr;
 use std::{path::Path, io::Error, io::ErrorKind};
 use blake3::{self, Hash};
 use walkdir::{self, WalkDir};
@@ -22,18 +23,6 @@ impl AudioQuality {
     }
 }
 
-pub enum CheckSum {
-    Blake3(blake3::Hash),
-}
-
-
-impl CheckSum {
-    pub fn as_str(&self) -> String {
-        match self {
-            CheckSum::Blake3(hash) => String::from(hash.to_hex().as_str()),
-        }
-    }
-}
 
 
 #[allow(dead_code)]
@@ -42,8 +31,10 @@ pub struct Album {
     pub quality: AudioQuality,
     pub title: String,
     pub id: Option<String>,
-    pub checksum: CheckSum,
+    pub checksum: String,
 }
+
+
 
 #[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
@@ -172,7 +163,7 @@ pub async fn scan(path: &Path) -> Result<Music, Error>
                     quality,
                     title,
                     id,
-                    checksum: CheckSum::Blake3(blake3_dir_digest(path.as_path()).await?),
+                    checksum: blake3_dir_digest(path.as_path()).await?.to_string(),
                 };
                 music.single_album.push(album);
             },
@@ -203,7 +194,7 @@ pub async fn scan(path: &Path) -> Result<Music, Error>
                                 quality,
                                 title,
                                 id,
-                                checksum: CheckSum::Blake3(blake3_dir_digest(path.as_path()).await?),
+                                checksum: blake3_dir_digest(path.as_path()).await?.to_string(),
                             };
                             album_set.albums.push(album);
                         },

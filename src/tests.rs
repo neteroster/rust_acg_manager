@@ -68,7 +68,7 @@ fn generate_line_album_test() {
         quality: AudioQuality::CdRes,
         title: String::from("TestT"),
         id: Some(String::from("A001")),
-        checksum: scanner::CheckSum::Blake3(Hash::from_str("cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb").unwrap())
+        checksum: String::from("cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb")
     };
     let res = generate_line_album(&ab, 1);
     assert_eq!(res.as_str(), "    - [A001][CD-Res]TestT[checksum | BLAKE3 | cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb]");
@@ -76,7 +76,7 @@ fn generate_line_album_test() {
         quality: AudioQuality::CdRes,
         title: String::from("TestT"),
         id: None,
-        checksum: scanner::CheckSum::Blake3(Hash::from_str("cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb").unwrap())
+        checksum: String::from("cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb")
     };
     let res = generate_line_album(&ab, 1);
     assert_eq!(res.as_str(), "    - [N][CD-Res]TestT[checksum | BLAKE3 | cb51de251349b4b132f3328775ee30144f2fbc4d096031797ea24c821173ccdb]");
